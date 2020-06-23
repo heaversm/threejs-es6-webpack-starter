@@ -1,9 +1,7 @@
-canvas {
-  outline: 0.1rem solid var(--color-highlighted);
-}
-
-button {
-  background: none;
-  border-color: var(--color-highlighted);
-  border-style: solid;
+body {
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
 }

@@ -6,10 +6,8 @@ import { Interaction } from "three.interaction";
 import * as Detector from "../js/vendor/Detector";
 import * as DAT from "../js/vendor/dat.gui.min";
 
-const checkerboard = require("../textures/checkerboard.jpg");
-const star = require("../textures/star.png");
-const vertexShader = require("../glsl/vertexShader.glsl");
-const fragmentShader = require("../glsl/fragmentShader.glsl");
+//const vertexShader = require("../glsl/vertexShader.glsl");
+//const fragmentShader = require("../glsl/fragmentShader.glsl");
 
 const CAMERA_NAME = "Perspective Camera";
 const DIRECTIONAL_LIGHT_NAME = "Directional Light";
@@ -20,9 +18,12 @@ export class Application {
   constructor(opts) {
     this.showHelpers =
       opts && opts.showHelpers !== undefined ? opts.showHelpers : true;
+    this.showRays =
+      opts && opts.showRays !== undefined ? opts.showHelpers : true;
+    this.showGUI = opts && opts.showGUI !== undefined ? opts.showGUI : true;
+    this.helpers = opts && opts.helpers !== undefined ? opts.helpers : [];
     this.canvas = document.getElementById("application-canvas");
-    this.container = document.querySelector("main .canvas-container-inner");
-    this.createTooltip();
+    this.container = document.querySelector("main .canvas-container");
     this.textureLoader = new THREE.TextureLoader();
 
     if (Detector.webgl) {
@@ -43,12 +44,10 @@ export class Application {
     this.handleClick = this.handleClick.bind(this);
     this.handleMouseMove = this.handleMouseMove.bind(this);
     this.handleResize = this.handleResize.bind(this);
-    this.showTooltip = this.showTooltip.bind(this);
-    this.hideTooltip = this.hideTooltip.bind(this);
   }
 
   init(canvas) {
-    const showGUI = false;
+    const showGUI = this.showGUI;
     window.addEventListener("resize", this.handleResize);
     this.setupScene();
     this.setupRenderer(canvas);
@@ -64,43 +63,17 @@ export class Application {
     if (showGUI) {
       this.setupGUI();
     }
-
-    this.addFloor(100, 100);
-    this.addCube(20);
-    this.addCustomMesh();
-
-    const particleSpecs = { spread: { x: 50, y: 100, z: 50 } };
-    this.addParticleSystem(300, 5, particleSpecs);
-
-    const boxSpecs = {
-      depth: 20,
-      height: 10,
-      spread: { x: 20, y: 20, z: 50 },
-      width: 5,
-    };
-    this.addGroupObject(10, boxSpecs);
+    //this.addCustomMesh();
   }
 
   render() {
     this.controls.update();
-    this.updateCustomMesh();
+    // this.updateCustomMesh();
     this.renderer.render(this.scene, this.camera);
     // when render is invoked via requestAnimationFrame(this.render) there is
     // no 'this', so either we bind it explicitly or use an es6 arrow function.
     // requestAnimationFrame(this.render.bind(this));
     requestAnimationFrame(() => this.render());
-  }
-
-  createTooltip() {
-    const main = document.querySelector("main");
-    if (!main) {
-      alert(`You have no '<main>' tag on ythe HTML page. You need exactly ONE`);
-    }
-    const div = document.createElement("div");
-    div.setAttribute("class", "tooltip");
-    div.setAttribute("data-cy", "tooltip");
-    main.appendChild(div);
-    this.tooltip = div;
   }
 
   handleClick(event) {
@@ -114,8 +87,10 @@ export class Application {
       intersection.object.material.color.setHex(hexColor);
 
       const { direction, origin } = this.raycaster.ray;
-      const arrow = new THREE.ArrowHelper(direction, origin, 100, hexColor);
-      this.scene.add(arrow);
+      if (this.showRays) {
+        const arrow = new THREE.ArrowHelper(direction, origin, 100, hexColor);
+        this.scene.add(arrow);
+      }
     }
   }
 
@@ -129,19 +104,6 @@ export class Application {
     this.camera.aspect = clientWidth / clientHeight;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(clientWidth, clientHeight);
-  }
-
-  showTooltip(interactionEvent) {
-    const { name, uuid, type } = interactionEvent.target;
-    const { x, y } = interactionEvent.data.global;
-    const [xScreen, yScreen] = this.getScreenCoordinates(x, y);
-    this.tooltip.innerHTML = `<h4>${name} (${type})</h4><span><em>Click to cast a ray</em></span>`;
-    const style = `left: ${xScreen}px; top: ${yScreen}px; visibility: visible; opacity: 0.8`;
-    this.tooltip.style = style;
-  }
-
-  hideTooltip(interactionEvent) {
-    this.tooltip.style = "visibility: hidden";
   }
 
   /**
@@ -159,7 +121,7 @@ export class Application {
     this.scene.background = color;
     this.scene.fog = null;
     // Any Three.js object in the scene (and the scene itself) can have a name.
-    this.scene.name = "My Three.js Scene";
+    this.scene.name = "Depthkit Character Test";
   }
 
   /**
@@ -218,16 +180,20 @@ export class Application {
     this.scene.add(ambientLight);
   }
 
-  setupHelpers() {
+  setupFloorHelper() {
     const gridHelper = new THREE.GridHelper(200, 16);
     gridHelper.name = "Floor GridHelper";
     this.scene.add(gridHelper);
+  }
 
+  setupAxisHelper() {
     // XYZ axes helper (XYZ axes are RGB colors, respectively)
     const axesHelper = new THREE.AxesHelper(75);
     axesHelper.name = "XYZ AzesHelper";
     this.scene.add(axesHelper);
+  }
 
+  setupLightHelpers() {
     const dirLight = this.scene.getObjectByName(DIRECTIONAL_LIGHT_NAME);
 
     const dirLightHelper = new THREE.DirectionalLightHelper(dirLight, 10);
@@ -249,6 +215,23 @@ export class Application {
     );
     spotLightCameraHelper.name = `${SPOT_LIGHT_NAME} Shadow Camera Helper`;
     this.scene.add(spotLightCameraHelper);
+  }
+
+  setupHelpers() {
+    this.helpers.forEach(helper => {
+      console.log(helper);
+      switch (helper) {
+        case "floor":
+          this.setupFloorHelper();
+          break;
+        case "axis":
+          this.setupAxisHelper();
+          break;
+        case "light":
+          this.setupLightHelpers();
+          break;
+      }
+    });
   }
 
   setupRay() {
@@ -275,18 +258,7 @@ export class Application {
       floor.position.y = -0.5;
       floor.rotation.x = Math.PI / 2;
       this.scene.add(floor);
-
-      floor.cursor = "pointer";
-      floor.on("mouseover", this.showTooltip);
-      floor.on("mouseout", this.hideTooltip);
     };
-
-    const onProgress = undefined;
-
-    const onError = event => {
-      alert(`Impossible to load the texture ${checkerboard}`);
-    };
-    this.textureLoader.load(checkerboard, onLoad, onProgress, onError);
   }
 
   setupControls() {
@@ -294,7 +266,7 @@ export class Application {
     this.controls.enabled = true;
     this.controls.maxDistance = 1500;
     this.controls.minDistance = 0;
-    this.controls.autoRotate = true;
+    this.controls.autoRotate = false;
   }
 
   setupGUI() {
@@ -348,7 +320,7 @@ export class Application {
     const customMesh = new THREE.Mesh(geometry, material);
     customMesh.name = CUSTOM_MESH_NAME;
     customMesh.position.set(5, 5, 5);
-    this.scene.add(customMesh);
+    //this.scene.add(customMesh);
   }
 
   updateCustomMesh() {
@@ -361,84 +333,6 @@ export class Application {
     // attribute buffers are not refreshed automatically. To update custom
     // attributes we need to set the needsUpdate flag to true
     customMesh.geometry.attributes.vertexDisplacement.needsUpdate = true;
-  }
-
-  addCube(side) {
-    const geometry = new THREE.CubeGeometry(side, side, side);
-    const material = new THREE.MeshLambertMaterial({ color: 0xfbbc05 });
-    const cube = new THREE.Mesh(geometry, material);
-    cube.name = "Cube";
-    cube.position.set(0, side / 2, 0);
-    this.scene.add(cube);
-
-    cube.cursor = "pointer";
-    cube.on("mouseover", this.showTooltip);
-    cube.on("mouseout", this.hideTooltip);
-  }
-
-  /**
-   * Add a particle system that uses the same texture for each particle.
-   * The texture is asynchronously loaded.
-   * Note: Three.js's TextureLoader does not support progress events.
-   * @see https://threejs.org/docs/#api/en/loaders/TextureLoader
-   */
-  addParticleSystem(numParticles, particleSize, particleSpecs) {
-    const geometry = new THREE.Geometry();
-    const particles = Array(numParticles)
-      .fill(particleSpecs)
-      .map(makeParticle);
-    geometry.vertices = particles;
-
-    const onLoad = texture => {
-      const material = new THREE.PointsMaterial({
-        // alphaTest's default is 0 and the particles overlap. Any value > 0
-        // prevents the particles from overlapping.
-        alphaTest: 0.5,
-        map: texture,
-        size: particleSize,
-        transparent: true,
-      });
-
-      const particleSystem = new THREE.Points(geometry, material);
-      particleSystem.name = "Stars";
-      particleSystem.position.set(-50, 50, -50);
-      this.scene.add(particleSystem);
-
-      particleSystem.cursor = "pointer";
-      particleSystem.on("mouseover", this.showTooltip);
-      particleSystem.on("mouseout", this.hideTooltip);
-    };
-
-    const onProgress = undefined;
-
-    const onError = event => {
-      alert(`Impossible to load the texture ${star}`);
-    };
-
-    this.textureLoader.load(star, onLoad, onProgress, onError);
-  }
-
-  /**
-   * Add a Three.js Group object to the scene.
-   */
-  addGroupObject(numBoxes, boxSpecs) {
-    const group = new THREE.Group();
-    group.name = "Group of Boxes";
-    const { depth, height, spread, width } = boxSpecs;
-    const geometry = new THREE.BoxGeometry(width, height, depth);
-
-    const meshes = Array(numBoxes)
-      .fill({ geometry, spread })
-      .map(makeMesh);
-    for (const mesh of meshes) {
-      group.add(mesh);
-    }
-    group.position.set(50, 20, 50);
-    this.scene.add(group);
-
-    group.cursor = "pointer";
-    group.on("mouseover", this.showTooltip);
-    group.on("mouseout", this.hideTooltip);
   }
 
   /**
@@ -498,33 +392,4 @@ export class Application {
     const yScreen = yRelativePx + y;
     return [xScreen, yScreen];
   }
-}
-
-/**
- * Create a particle for the particle system.
- */
-function makeParticle(d, i) {
-  const particle = new THREE.Vector3();
-  particle.x = THREE.Math.randFloatSpread(d.spread.x);
-  particle.y = THREE.Math.randFloatSpread(d.spread.y);
-  particle.z = THREE.Math.randFloatSpread(d.spread.z);
-  return particle;
-}
-
-/**
- * Make a mesh for each Box in the GroupObject.
- */
-function makeMesh(d, i) {
-  const material = new THREE.MeshLambertMaterial({
-    color: Math.random() * 0xffffff,
-  });
-  const mesh = new THREE.Mesh(d.geometry, material);
-  mesh.name = `Box ${i} in GroupObject`;
-  mesh.position.x = THREE.Math.randFloatSpread(d.spread.x);
-  mesh.position.y = THREE.Math.randFloatSpread(d.spread.y);
-  mesh.position.z = THREE.Math.randFloatSpread(d.spread.z);
-  mesh.rotation.x = Math.random() * 360 * (Math.PI / 180);
-  mesh.rotation.y = Math.random() * 360 * (Math.PI / 180);
-  mesh.rotation.z = Math.random() * 360 * (Math.PI / 180);
-  return mesh;
 }

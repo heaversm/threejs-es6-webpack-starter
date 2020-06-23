@@ -131,7 +131,7 @@ const commonConfigFn = (env = {}, argv = {}) => {
   }
   console.log(`Prepare ${argv.mode.toUpperCase()} build`);
 
-  const APP_NAME = `Three.js ES6 Webpack 4 Project Starter (${argv.mode})`;
+  const APP_NAME = `Depthkit Prototype (${argv.mode})`;
   const PUBLIC_URL = env.publicUrl;
 
   // In production html-webpack-plugin should automatically minify HTML
@@ -158,7 +158,7 @@ const commonConfigFn = (env = {}, argv = {}) => {
     }),
     new DefinePlugin({
       APP_NAME: JSON.stringify(APP_NAME),
-      AUTHOR: JSON.stringify("Giacomo Debidda"),
+      AUTHOR: JSON.stringify("Reconstrukt"),
       PUBLIC_URL: JSON.stringify(PUBLIC_URL),
     }),
     new DuplicatePackageCheckerPlugin({
@@ -197,13 +197,6 @@ const commonConfigFn = (env = {}, argv = {}) => {
         "documents",
         "offscreen-transfer.html"
       ),
-    }),
-    new HtmlWebpackPlugin({
-      chunks: ["about", "commons", "runtime", "styles"],
-      filename: "about.html",
-      hash: false,
-      minify,
-      template: path.resolve("src", "html", "documents", "about.html"),
     }),
     new HtmlWebpackPlugin({
       chunks: ["404", "commons", "runtime", "styles"],

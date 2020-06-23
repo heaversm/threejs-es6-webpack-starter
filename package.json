@@ -32,9 +32,7 @@
     "test:unit": "jest --verbose --no-cache",
     "test:e2e:cli": "cypress run --browser chromium --key da1be047-979c-4b0f-bacf-fef804c7c6bb",
     "test:e2e:dashboard": "cypress open",
-    "updtr": "updtr --use yarn --test-stdout",
-    "webhint": "hint https://jackdbd.github.io/threejs-es6-webpack-starter/",
-    "webhint:report": "python -m webbrowser ~/repos/threejs-es6-webpack-starter/hint-report/https-jackdbd-github-io-threejs-es6-webpack-starter/index.html"
+    "updtr": "updtr --use yarn --test-stdout"
   },
   "dependencies": {
     "gltf-loader-ts": "0.3.1",

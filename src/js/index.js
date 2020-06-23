@@ -1,9 +1,11 @@
 import { Application } from "./application";
-import { toggleMobileNav } from "./components/navbar";
 import "../css/index.css";
 
-window.toggleMobileNav = toggleMobileNav;
-
 (function iife() {
-  new Application();
+  new Application({
+    showHelpers: true,
+    showRays: true,
+    helpers: ["floor", "axis"], //floor, axis, light
+    showGUI: true,
+  });
 })();

@@ -14,29 +14,6 @@ describe("Three.js application", () => {
     // console.log("browser", Cypress.browser);
   });
 
-  context("Link to About page", () => {
-    const selector = "[data-cy=link-to-about-page]";
-    it("is in the DOM", () => {
-      cy.get(selector)
-        .invoke("attr", "href")
-        .should("contain", "about");
-    });
-
-    it("navigates to about.html if clicked ", () => {
-      cy.get(selector).click();
-      cy.url().should("include", "about.html");
-    });
-  });
-
-  context("Tooltip", () => {
-    const selector = "[data-cy=tooltip]";
-    it("exists but it is invisible at the startup", () => {
-      cy.get(selector)
-        .should("exist")
-        .and("be.hidden");
-    });
-  });
-
   context("WebGL canvas' container", () => {
     const selector = "[data-cy=canvas-container]";
 
